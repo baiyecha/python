@@ -5,16 +5,22 @@ import os
 
 baseHtml = 'http://www.mzitu.com';
 
-for j in range(10, 100):
+for j in range(1, 100):
     Html = baseHtml + '/page/' + '%d' %j + '/';
-    code = requests.get(Html);
+    try:
+        code = requests.get(Html);
+    except requests.RequestException as e:
+        continue;
     #print code.text;
     imageUrl = re.finditer("<li><a href=\"(.+?)\" target=\"_blank\">", code.text);
     for item in imageUrl:
         print item.group(1);
         baseImageUrl = item.group(1);
         print baseImageUrl;
-        textHtml = requests.get(baseImageUrl);
+        try:
+            textHtml = requests.get(baseImageUrl);
+        except requests.RequestException as e:
+                continue;
       #  print textHtml.text;
         print re.search("<span class='dots'>.+?</span><a href(.+?)</a>", textHtml.text).group(1);
         imageCount = re.search("<span>(.+?)</span>",re.search("<span class='dots'>.+?</span><a href(.+?)</a>", textHtml.text).group(1));
@@ -22,17 +28,25 @@ for j in range(10, 100):
     #        print
         print imageCount.group(1);
         imageName = re.search("alt=\"(.+?)\" /></a></p>", textHtml.text);
-        if not os.path.isdir('image'+ '/' + imageName.group(1)):
-            os.mkdir('image'+ '/' + imageName.group(1));
+        if not os.path.isdir('image_meizi'+ '/' + imageName.group(1)):
+            os.mkdir('image_meizi'+ '/' + imageName.group(1));
 
         for i in range(1, int(imageCount.group(1))):
             imageDataUrlHtml = baseImageUrl + "/"+'%d' %i;
             print imageDataUrlHtml;
-            imageDataHtml = requests.get(imageDataUrlHtml);
+            try:
+                imageDataHtml = requests.get(imageDataUrlHtml);
+            except requests.RequestException as e:
+                continue;
+
             #print imageDataHtml.text;
             imageDataUrl = re.search("<img src=\"(.+?)\" alt=", imageDataHtml.text).group(1);
             print 'imageDataUrl = ' + imageDataUrl;
-            imageData = requests.get(imageDataUrl);
-            open('image'+ '/' + imageName.group(1) + '/' + '%d' %i + '.jpg','wb').write(imageData.content);
+            try:
+                imageData = requests.get(imageDataUrl);
+            except requests.RequestException as e:
+                continue;
+            else:
+                open('image_meizi'+ '/' + imageName.group(1) + '/' + '%d' %i + '.jpg','wb').write(imageData.content);
 
 
