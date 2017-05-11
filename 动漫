@@ -1,0 +1,47 @@
+# -*- coding: utf-8 -*-
+import requests
+import re
+import os
+
+baseUrl = 'http://www.apic.in/';
+
+baseUrlHtml = requests.get(baseUrl);
+#print baseUrlHtml.text;
+hentaiUrl = baseUrl + 'hentai';
+#print hentaiUrl;
+hentaiUrlHtml = requests.get(hentaiUrl);
+#print hentaiUrlHtml.text;
+'<a href="http://www.apic.in/hentai/zukongfuli" title='
+'<a href="http://www.apic.in/hentai/pangci" title=" 胖次,胖次图片,胖次动漫图片下载"><img src="http://img.gov.com.de/2015/02/%E8%83%96%E6%AC%A1.gif'
+collectionUrl = re.finditer('<a href="(.+?)" title=".+?"><img src=.+?gif', hentaiUrlHtml.text);
+for collectionUrlItem in collectionUrl:
+    print collectionUrlItem.group(1);
+    '<h2><a href="(.+?)" title=".+?A区'
+    collectionUrlItemUrl = collectionUrlItem.group(1);
+    collectionUrlItemUrlHtml = requests.get(collectionUrlItemUrl);
+    #print collectionUrlItemUrlHtml.text;
+    imagePageCollection = re.finditer('<h2><a href="(.+?)" title=".+?</a></h2>', collectionUrlItemUrlHtml.text);
+    for imagePageCollectionItem in imagePageCollection:
+        imagePageUrl = imagePageCollectionItem.group(1);
+        print imagePageUrl;
+        imageUrlHtml = requests.get(imagePageUrl);
+        imageName = re.search('<title> (.+?) - A.+?</title>', imageUrlHtml.text);
+        if imageName:
+            imageName = imageName.group(1);
+        else:
+            imageName = '无名';
+        print imageName;
+        if not os.path.isdir('image'+ '/' + imageName):
+            os.mkdir('image'+ '/' + imageName);
+
+        imageUrlCollection = re.finditer('src="(.+?)" alt=".+?" width', imageUrlHtml.text);
+        imageCount = 1
+        for imageUrl in imageUrlCollection:
+            print imageUrl.group(1);
+            try:
+                imageData = requests.get(imageUrl.group(1));
+            except requests.RequestException as e:
+                continue;
+            else:
+                open('image'+ '/' + imageName + '/' + '%d' %imageCount + '.jpg','wb').write(imageData.content);
+                imageCount += 1;
